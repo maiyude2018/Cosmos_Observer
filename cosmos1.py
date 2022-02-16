@@ -1,65 +1,73 @@
-import requests,time
-import base64
-import hashlib
-
-#从hash获得交易详细信息
-def re_tx(b):
-    url_hash="https://api.cosmos.network/txs/%s"
-    hash = hashlib.sha256(b).hexdigest().upper()
-    print("hash",hash)
-    r=requests.get(url_hash % hash)
-    return r.json()["tx"]
+# -*- coding: utf-8 -*-
+import requests, time
 
 
-start_block=9403352
+#从区块高度获得交易信息
+def re_tx_height(height):
+    url_height = 'https://api.cosmos.network/txs?tx.height=%s'
+    r = requests.get(url_height % str(height))
+    # print(r.json())
+    return r.json()
+
+
+block_height = 9403396
+block_count = 0
+t0 = time.time()
+
+
 while True:
     try:
-        url="https://api.cosmos.network/blocks/%s"
-        print(start_block)
-        r=requests.get(url % start_block)
-        txs=r.json()["block"]["data"]["txs"]
-        #print(txs)
-        for w in txs:
-            b = base64.b64decode(w)
-            #print(b)
-            if b"MsgUndelegate" in b:#取消代理信息
-                print("Undelegate")
-                tx=re_tx(b)
-                msg = tx["value"]["msg"]
-                for i in msg:
-                    # print(i)
-                    type = i["type"]
-                    if type == "cosmos-sdk/MsgUndelegate":
-                        delegator_address = i["value"]["delegator_address"]
-                        validator_address = i["value"]["validator_address"]
-                        amount = i["value"]["amount"]["amount"]
+        print(block_height)
+        r = re_tx_height(block_height)
+        # 如果区块里有txs信息
+        if 'txs' in r:
+            txs = r['txs']
+            for tx in txs:
+                # print(tx)
+                height = tx['height']
+                # print("height %s" % height)
+                txhash = tx['txhash']
+                # print("hash %s" % txhash)
+                msgs = tx['tx']['value']['msg']
+                for msg in msgs:
+                    if msg['type'] == "cosmos-sdk/MsgDelegate":
+                        print(msg['type'][14:])       # Delegate
+                        print("hash %s" % txhash)
+                        delegator_address = msg["value"]["delegator_address"]
+                        validator_address = msg["value"]["validator_address"]
+                        amount = msg["value"]["amount"]["amount"]
                         print(delegator_address, "to", validator_address, amount)
-            if b"MsgDelegate" in b:#代理信息
-                print("Delegate")
-                tx = re_tx(b)
-                msg=tx["value"]["msg"]
-                for i in msg:
-                    #print(i)
-                    type=i["type"]
-                    if type == "cosmos-sdk/MsgDelegate":
-                        delegator_address=i["value"]["delegator_address"]
-                        validator_address=i["value"]["validator_address"]
-                        amount = i["value"]["amount"]["amount"]
-                        print(delegator_address,"to",validator_address,amount)
-            if b"MsgBeginRedelegate" in b:#Redelegate信息
-                print("Redelegate")
-                tx = re_tx(b)
-                msg = tx["value"]["msg"]
-                for i in msg:
-                    #print(i)
-                    type = i["type"]
-                    if type == "cosmos-sdk/MsgBeginRedelegate":
-                        delegator_address = i["value"]["delegator_address"]
-                        validator_src_address = i["value"]["validator_src_address"]
-                        validator_dst_address = i["value"]["validator_dst_address"]
-                        amount = i["value"]["amount"]["amount"]
+                    elif msg['type'] == "cosmos-sdk/MsgUndelegate":
+                        print(msg['type'][14:])          # Undelegate
+                        print("hash %s" % txhash)
+                        delegator_address = msg["value"]["delegator_address"]
+                        validator_address = msg["value"]["validator_address"]
+                        amount = msg["value"]["amount"]["amount"]
+                        print(delegator_address, "to", validator_address, amount)
+                    elif msg['type'] == "cosmos-sdk/MsgBeginRedelegate":
+                        print(msg['type'][14:])          # BeginRedelegate
+                        print("hash %s" % txhash)
+                        delegator_address = msg["value"]["delegator_address"]
+                        validator_src_address = msg["value"]["validator_src_address"]
+                        validator_dst_address = msg["value"]["validator_dst_address"]
+                        amount = msg["value"]["amount"]["amount"]
                         print(delegator_address, validator_src_address,"-to-",validator_dst_address ,amount)
-        start_block += 1
+
+        block_height += 1
+        block_count += 1
+
+        # 结束区块高度
+        # if block_height > 9403400:
+        #     break
     except Exception as e:
+        print('[ERROR] Exception occurred when parsing block %s !' % block_height)
         print(e)
+        #block_height += 1
+        block_count += 1
         time.sleep(2)
+
+
+# 运行时间
+running_time = time.time() - t0
+print("Running time: ", time.time() - t0, "seconds")
+print("Average time per block:", running_time / block_count, "seconds")
