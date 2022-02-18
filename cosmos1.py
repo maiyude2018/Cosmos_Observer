@@ -125,7 +125,7 @@ while True:
 
 
                 # 判断交易数量大于2，且含有转账和代理操作，含有memo
-                if len(msgs) == 2 and status == True and "cosmos-sdk/MsgDelegate" in str(msgs) and "cosmos-sdk/MsgSend" in str(msgs) and len(memo) > 0:
+                if len(msgs) == 2 and "cosmos-sdk/MsgDelegate" in str(msgs) and "cosmos-sdk/MsgSend" in str(msgs) and len(memo) > 0:
                     check_send = False
                     check_delegate = False
                     check_memo = False
@@ -157,9 +157,10 @@ while True:
                             validator_address = lists["value"]["validator_address"]
                             amount_Delegate = lists["value"]["amount"]["amount"]
                             #print(delegator_address, "to", validator_address, amount_Delegate)
-                            if validator_address in pools.keys() and int(amount_Delegate) > 0 :#检测代理对象是否在walnut合约列表中以及数量是否大于0
+                            if validator_address in pools.keys()  :#检测代理对象是否在walnut合约列表中
                                 check_delegate = True
                     #print(check_delegate, check_send, check_memo)
+
                     if check_send == True and check_delegate == True and check_memo == True:
                         #读取该用户代理到该节点的总量
                         delegations_data=get_delegations(delegator_address)
