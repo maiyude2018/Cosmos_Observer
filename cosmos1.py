@@ -207,7 +207,7 @@ while True:
                 else:
                     pools = getAllPools()
                     for msg in msgs:
-                        if msg['type'] == "cosmos-sdk/MsgDelegate" and status == True:
+                        if msg['type'] == "cosmos-sdk/MsgDelegate" :
                             #print(msg['type'][14:])       # Delegate
                             #print("hash %s" % txhash)
                             delegator_address = msg["value"]["delegator_address"]
@@ -216,7 +216,7 @@ while True:
                             #print(delegator_address, "to", validator_address, amount)
                             # 检查代理节点是否在walnut合约中
                             cancel_all_staking(validator_address,delegator_address,pools)
-                        elif msg['type'] == "cosmos-sdk/MsgUndelegate" and status == True:
+                        elif msg['type'] == "cosmos-sdk/MsgUndelegate" :
                             #print(msg['type'][14:])          # Undelegate
                             #print("hash %s" % txhash)
                             delegator_address = msg["value"]["delegator_address"]
@@ -225,7 +225,7 @@ while True:
                             #print(delegator_address, "to", validator_address, amount)
                             # 检查代理节点是否在walnut合约中
                             cancel_all_staking(validator_address,delegator_address, pools)
-                        elif msg['type'] == "cosmos-sdk/MsgBeginRedelegate" and status == True:
+                        elif msg['type'] == "cosmos-sdk/MsgBeginRedelegate" :
                             #print(msg['type'][14:])          # BeginRedelegate
                             #print("hash %s" % txhash)
                             delegator_address = msg["value"]["delegator_address"]
